@@ -123,13 +123,9 @@ jobs:
       - name: Copy docker-compose.yml and application properties files to server
         run: |
           scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./docker-compose.yml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/docker-compose.yml
-          scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./.env ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/.env
-          if [ -f ./zaqlick-app/application.yaml ]; then
-            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./zaqlick-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/zaqlick-app/application.yaml
-          fi
-          if [ -f ./stock-app/application.yaml ]; then
-            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./stock-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/stock-app/application.yaml
-          fi
+          scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./.env ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/.env          
+          scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./zaqlick-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/zaqlick-app/application.yaml
+          scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./stock-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/stock-app/application.yaml
 
       - name: Global Docker login on server
         env:
