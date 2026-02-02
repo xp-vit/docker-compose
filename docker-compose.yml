@@ -23,14 +23,14 @@ services:
     labels:
       - "traefik.enable=true"
       # HTTPS router
-      - "traefik.http.routers.api.rule=Host(`data.patotski.com`)"
-      - "traefik.http.routers.api.entrypoints=websecure"
-      - "traefik.http.routers.api.tls.certresolver=le"
-      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      - "traefik.http.routers.parser.rule=Host(`data.patotski.com`)"
+      - "traefik.http.routers.parser.entrypoints=websecure"
+      - "traefik.http.routers.parser.tls.certresolver=le"
+      - "traefik.http.services.parser.loadbalancer.server.port=8080"
       # HTTP router (redirects to HTTPS)
-      - "traefik.http.routers.api-http.rule=Host(`data.patotski.com`)"
-      - "traefik.http.routers.api-http.entrypoints=web"
-      - "traefik.http.routers.api-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.parser-http.rule=Host(`data.patotski.com`)"
+      - "traefik.http.routers.parser-http.entrypoints=web"
+      - "traefik.http.routers.parser-http.middlewares=redirect-to-https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
     ports:
       - "8080:8080"
@@ -46,15 +46,14 @@ services:
     labels:
       - "traefik.enable=true"
       # HTTPS router
-      - "traefik.http.routers.api.rule=Host(`app2.zaqlick.com`)"
-      - "traefik.http.routers.api.entrypoints=websecure"
-      - "traefik.http.routers.api.tls.certresolver=le"
-      - "traefik.http.services.api.loadbalancer.server.port=8889"
+      - "traefik.http.routers.zaqlick.rule=Host(`app2.zaqlick.com`)"
+      - "traefik.http.routers.zaqlick.entrypoints=websecure"
+      - "traefik.http.routers.zaqlick.tls.certresolver=le"
+      - "traefik.http.services.zaqlick.loadbalancer.server.port=8080"
       # HTTP router (redirects to HTTPS)
-      - "traefik.http.routers.api-http.rule=Host(`app2.zaqlick.com`)"
-      - "traefik.http.routers.api-http.entrypoints=web"
-      - "traefik.http.routers.api-http.middlewares=redirect-to-https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.routers.zaqlick-http.rule=Host(`app2.zaqlick.com`)"
+      - "traefik.http.routers.zaqlick-http.entrypoints=web"
+      - "traefik.http.routers.zaqlick-http.middlewares=redirect-to-https"
     ports:
       - "8889:8080"
     restart: unless-stopped
