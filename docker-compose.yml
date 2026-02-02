@@ -34,11 +34,13 @@ services:
     image: xpvit/zaqlick-social-data-parser:${ZAQLICK_SOCIAL_DATA_PARSER_VERSION:-latest}
     labels:
       - "traefik.enable=true"
+      # Service definition
+      - "traefik.http.services.parser.loadbalancer.server.port=8080"
       # HTTPS router
       - "traefik.http.routers.parser.rule=Host(`data.patotski.com`)"
       - "traefik.http.routers.parser.entrypoints=websecure"
       - "traefik.http.routers.parser.tls.certresolver=le"
-      - "traefik.http.services.parser.loadbalancer.server.port=8080"
+      - "traefik.http.routers.parser.service=parser"
       # HTTP router (redirects to HTTPS)
       - "traefik.http.routers.parser-http.rule=Host(`data.patotski.com`)"
       - "traefik.http.routers.parser-http.entrypoints=web"
@@ -58,11 +60,13 @@ services:
     image: api.repoflow.io/xpvitblr-504/zaqlick-app/zaqlick-app:${ZAQLICK_APP_VERSION:-latest}
     labels:
       - "traefik.enable=true"
+      # Service definition
+      - "traefik.http.services.zaqlick.loadbalancer.server.port=8080"
       # HTTPS router
       - "traefik.http.routers.zaqlick.rule=Host(`app2.zaqlick.com`)"
       - "traefik.http.routers.zaqlick.entrypoints=websecure"
       - "traefik.http.routers.zaqlick.tls.certresolver=le"
-      - "traefik.http.services.zaqlick.loadbalancer.server.port=8889"
+      - "traefik.http.routers.zaqlick.service=zaqlick"
       # HTTP router (redirects to HTTPS)
       - "traefik.http.routers.zaqlick-http.rule=Host(`app2.zaqlick.com`)"
       - "traefik.http.routers.zaqlick-http.entrypoints=web"
@@ -77,7 +81,7 @@ services:
     volumes:
       - ./zaqlick-app/application.yaml:/workspace/application-prod.yaml
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8889/actuator/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
