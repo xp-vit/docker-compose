@@ -111,7 +111,7 @@ jobs:
           DB_URL: ${{ secrets.ZAQLICK_DB_URL }}
           DB_USER: ${{ secrets.ZAQLICK_DB_USER }}
           DB_PASSWORD: ${{ secrets.ZAQLICK_DB_PASSWORD }}
-          APP_BASE_URL: ${{ vars.APP_BASE_URL }}
+          APP_BASE_URL: ${{ vars.ZAQLICK_APP_BASE_URL }}
           MAILGUN_API_KEY: ${{ secrets.ZAQLICK_MAILGUN_API_KEY }}
           MAILGUN_DOMAIN: ${{ vars.ZAQLICK_MAILGUN_DOMAIN }}
           MAILGUN_FROM_EMAIL: ${{ vars.ZAQLICK_MAILGUN_FROM_EMAIL }}
