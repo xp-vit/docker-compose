@@ -10,6 +10,11 @@ services:
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.le.acme.httpchallenge=true
       - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+    labels:
+      - "traefik.enable=true"
+      # Define global redirect middleware
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
     ports:
       - "80:80"
       - "443:443"
@@ -31,7 +36,6 @@ services:
       - "traefik.http.routers.parser-http.rule=Host(`data.patotski.com`)"
       - "traefik.http.routers.parser-http.entrypoints=web"
       - "traefik.http.routers.parser-http.middlewares=redirect-to-https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
     ports:
       - "8080:8080"
     restart: unless-stopped
