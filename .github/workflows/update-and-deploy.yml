@@ -1,6 +1,10 @@
 name: Update Image Version and Deploy
 
 on:
+  # Run on push to main branch
+  push:
+    branches:
+      - main
   # Triggered by other repositories via repository_dispatch
   repository_dispatch:
     types: [update-image]
@@ -112,8 +116,8 @@ jobs:
           MAILGUN_DOMAIN: ${{ vars.ZAQLICK_MAILGUN_DOMAIN }}
           MAILGUN_FROM_EMAIL: ${{ vars.ZAQLICK_MAILGUN_FROM_EMAIL }}
         run: |
-          if [ -f zaqlick/application.yaml.template ]; then
-            envsubst < zaqlick/application.yaml.template > zaqlick/application.yaml
+          if [ -f zaqlick-app/application.yaml.template ]; then
+            envsubst < zaqlick-app/application.yaml.template > zaqlick-app/application.yaml
           fi
 
       - name: Copy docker-compose.yml and application properties files to server
