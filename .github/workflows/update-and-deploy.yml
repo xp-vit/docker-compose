@@ -124,12 +124,12 @@ jobs:
 
       - name: Global Docker login on server
         env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USER }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
         run: |
           ssh -i ~/.ssh/id_ed25519 ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} \
-            "docker login -u \"${DOCKER_USERNAME}\" -p \"${DOCKER_PASSWORD}\" \"${DOCKER_HOST}\""
+            "docker login -u \"${DOCKER_USER}\" -p \"${DOCKER_PASSWORD}\" \"${DOCKER_HOST}\""
 
       - name: Deploy on EC2
         run: |
