@@ -117,9 +117,12 @@ jobs:
 
       - name: Copy docker-compose.yml and application properties files to server
         run: |
-          scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./docker-compose.yml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/app/docker-compose.yml
-          if [ -f application.yaml ]; then
-            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/app/application.yaml
+          scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./docker-compose.yml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/docker-compose.yml
+          if [ -f ./zaqlick-app/application.yaml ]; then
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./zaqlick-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/zaqlick-app/application.yaml
+          fi
+          if [ -f ./stock-app/application.yaml ]; then
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./stock-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/stock-app/application.yaml
           fi
 
       - name: Global Docker login on server
@@ -135,7 +138,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 "${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}" <<'EOF'
           set -e
-          cd ~/app
+          cd ~/deploy
 
           echo "Stopping existing containers..."
           docker compose down --remove-orphans
