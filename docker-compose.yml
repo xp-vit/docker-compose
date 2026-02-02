@@ -1,0 +1,71 @@
+version: '3.8'
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:v3.6
+    command:
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --providers.docker=true
+      - --certificatesresolvers.le.acme.email=xp.vit.blr@gmail.com
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge=true
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./letsencrypt:/letsencrypt
+    restart: unless-stopped
+  zaqlick-social-data-parser:
+    container_name: data-parser
+    image: xpvit/zaqlick-social-data-parser:${ZAQLICK_SOCIAL_DATA_PARSER_VERSION:-latest}
+    labels:
+      - "traefik.enable=true"
+      # HTTPS router
+      - "traefik.http.routers.api.rule=Host(`data.patotski.com`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=le"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      # HTTP router (redirects to HTTPS)
+      - "traefik.http.routers.api-http.rule=Host(`data.patotski.com`)"
+      - "traefik.http.routers.api-http.entrypoints=web"
+      - "traefik.http.routers.api-http.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    volumes:
+      - ./stock-app/application.yaml:/workspace/application-prod.yaml
+    # Uncomment and adjust if you need persistent storage
+  zaqlick-app:
+    container_name: zaqlick-app
+    image: api.repoflow.io/xpvitblr-504/zaqlick-app/zaqlick-app:${ZAQLICK_APP_VERSION:-latest}
+    labels:
+      - "traefik.enable=true"
+      # HTTPS router
+      - "traefik.http.routers.api.rule=Host(`app2.zaqlick.com`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=le"
+      - "traefik.http.services.api.loadbalancer.server.port=8889"
+      # HTTP router (redirects to HTTPS)
+      - "traefik.http.routers.api-http.rule=Host(`app2.zaqlick.com`)"
+      - "traefik.http.routers.api-http.entrypoints=web"
+      - "traefik.http.routers.api-http.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+    ports:
+      - "8889:8080"
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    volumes:
+      - .zaqlick-app/application.yaml:/workspace/application-prod.yaml
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s

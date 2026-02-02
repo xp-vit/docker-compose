@@ -1,0 +1,157 @@
+name: Update Image Version and Deploy
+
+on:
+  # Triggered by other repositories via repository_dispatch
+  repository_dispatch:
+    types: [update-image]
+  
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      version_var:
+        description: 'Environment variable name (e.g., ZAQLICK_SOCIAL_DATA_PARSER_VERSION). Leave empty to just redeploy.'
+        required: false
+        type: string
+      image_tag:
+        description: 'New image tag/version (e.g., v1.2.3 or latest). Leave empty to just redeploy.'
+        required: false
+        type: string
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set variables from dispatch event
+        id: vars
+        run: |
+          # Handle both repository_dispatch and workflow_dispatch
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "version_var=${{ github.event.client_payload.version_var }}" >> $GITHUB_OUTPUT
+            echo "image_tag=${{ github.event.client_payload.image_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "version_var=${{ inputs.version_var }}" >> $GITHUB_OUTPUT
+            echo "image_tag=${{ inputs.image_tag }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update .env file with new image version
+        if: ${{ steps.vars.outputs.version_var != '' && steps.vars.outputs.image_tag != '' }}
+        run: |
+          VERSION_VAR="${{ steps.vars.outputs.version_var }}"
+          IMAGE_TAG="${{ steps.vars.outputs.image_tag }}"
+          
+          echo "Updating variable: $VERSION_VAR"
+          echo "New version: $IMAGE_TAG"
+          
+          # Update the version in .env file
+          if grep -q "^${VERSION_VAR}=" .env; then
+            # Variable exists, update it
+            sed -i "s|^${VERSION_VAR}=.*|${VERSION_VAR}=${IMAGE_TAG}|" .env
+          else
+            # Variable doesn't exist, add it
+            echo "${VERSION_VAR}=${IMAGE_TAG}" >> .env
+          fi
+          
+          echo "Updated .env file:"
+          cat .env
+
+      - name: Commit and push changes
+        if: ${{ steps.vars.outputs.version_var != '' && steps.vars.outputs.image_tag != '' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if there are any changes
+          if git diff --quiet .env; then
+            echo "No changes to commit"
+          else
+            git add .env
+            git commit -m "chore: update ${{ steps.vars.outputs.version_var }} to ${{ steps.vars.outputs.image_tag }}"
+            git push
+          fi
+
+      - name: Skip .env update (redeploy only)
+        if: ${{ steps.vars.outputs.version_var == '' || steps.vars.outputs.image_tag == '' }}
+        run: |
+          echo "No version_var or image_tag provided, skipping .env update"
+          echo "Proceeding with redeploy only..."
+
+      - name: Install envsubst
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext-base
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ vars.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Ensure app directory exists on server
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/app"
+
+      - name: Generate application properties file for zaqlick
+        env:
+          DB_URL: ${{ secrets.ZAQLICK_DB_URL }}
+          DB_USER: ${{ secrets.ZAQLICK_DB_USER }}
+          DB_PASSWORD: ${{ secrets.ZAQLICK_DB_PASSWORD }}
+          APP_BASE_URL: ${{ vars.APP_BASE_URL }}
+          MAILGUN_API_KEY: ${{ secrets.ZAQLICK_MAILGUN_API_KEY }}
+          MAILGUN_DOMAIN: ${{ vars.ZAQLICK_MAILGUN_DOMAIN }}
+          MAILGUN_FROM_EMAIL: ${{ vars.ZAQLICK_MAILGUN_FROM_EMAIL }}
+        run: |
+          if [ -f zaqlick/application.yaml.template ]; then
+            envsubst < zaqlick/application.yaml.template > zaqlick/application.yaml
+          fi
+
+      - name: Copy docker-compose.yml and application properties files to server
+        run: |
+          scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./docker-compose.yml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/app/docker-compose.yml
+          if [ -f application.yaml ]; then
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/app/application.yaml
+          fi
+
+      - name: Global Docker login on server
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} \
+            "docker login -u \"${DOCKERHUB_USERNAME}\" -p \"${DOCKERHUB_TOKEN}\""
+
+      - name: Deploy on EC2
+        run: |
+          ssh -i ~/.ssh/id_ed25519 "${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}" <<'EOF'
+          set -e
+          cd ~/app
+
+          echo "Stopping existing containers..."
+          docker compose down --remove-orphans
+
+          echo "Pulling latest images..."
+          docker compose pull
+
+          echo "Starting services..."
+          docker compose up -d
+
+          echo "Cleaning up unused images..."
+          docker image prune -f
+
+          echo "Deployment completed successfully!"
+          EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: |
+          rm -f ~/.ssh/id_ed25519

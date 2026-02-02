@@ -1,0 +1,14 @@
+---
+spring:
+  datasource:
+    url: "$ZAQLICK_DB_URL"
+    username: "$ZAQLICK_DB_USER"
+    password: "$ZAQLICK_DB_PASSWORD"
+app:
+  base-url: "$ZAQLICK_APP_BASE_URL"
+mailgun:
+  enabled: true
+  api-key: "$ZAQLICK_MAILGUN_API_KEY"
+  domain: "$ZAQLICK_MAILGUN_DOMAIN"
+  from-email: "$ZAQLICK_MAILGUN_FROM_EMAIL"
+  from-name: "Zaqlick"
