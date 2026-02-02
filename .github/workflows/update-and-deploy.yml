@@ -108,7 +108,7 @@ jobs:
 
       - name: Generate application properties file for zaqlick
         env:
-          ZAQLICK_DB_URL: ${{ secrets.ZAQLICK_DB_URL }}
+          ZAQLICK_DB_URL: ${{ vars.ZAQLICK_DB_URL }}
           ZAQLICK_DB_USER: ${{ secrets.ZAQLICK_DB_USER }}
           ZAQLICK_DB_PASSWORD: ${{ secrets.ZAQLICK_DB_PASSWORD }}
           ZAQLICK_APP_BASE_URL: ${{ vars.ZAQLICK_APP_BASE_URL }}
