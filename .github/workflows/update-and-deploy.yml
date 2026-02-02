@@ -122,9 +122,9 @@ jobs:
           fi
       - name: Generate application properties file for zaqlick
         env:
-          ZAQLICK_DB_URL: ${{ vars.SOCIAL_DATA_DB_URL }}
-          ZAQLICK_DB_USER: ${{ secrets.SOCIAL_DATA_DB_USER }}
-          ZAQLICK_DB_PASSWORD: ${{ secrets.SOCIAL_DATA_DB_PASSWORD }}
+          SOCIAL_DATA_DB_URL: ${{ vars.SOCIAL_DATA_DB_URL }}
+          SOCIAL_DATA_DB_USER: ${{ secrets.SOCIAL_DATA_DB_USER }}
+          SOCIAL_DATA_DB_PASSWORD: ${{ secrets.SOCIAL_DATA_DB_PASSWORD }}
         run: |
           if [ -f zaqlick-app/application.yaml.template ]; then
             envsubst < social-data-app/application.yaml.template > social-data-app/application.yaml
