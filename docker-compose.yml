@@ -62,7 +62,7 @@ services:
       - "traefik.http.routers.zaqlick.rule=Host(`app2.zaqlick.com`)"
       - "traefik.http.routers.zaqlick.entrypoints=websecure"
       - "traefik.http.routers.zaqlick.tls.certresolver=le"
-      - "traefik.http.services.zaqlick.loadbalancer.server.port=8080"
+      - "traefik.http.services.zaqlick.loadbalancer.server.port=8889"
       # HTTP router (redirects to HTTPS)
       - "traefik.http.routers.zaqlick-http.rule=Host(`app2.zaqlick.com`)"
       - "traefik.http.routers.zaqlick-http.entrypoints=web"
@@ -77,7 +77,7 @@ services:
     volumes:
       - ./zaqlick-app/application.yaml:/workspace/application-prod.yaml
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8889/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
