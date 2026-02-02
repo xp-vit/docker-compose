@@ -105,6 +105,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app"
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/stock-app"
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/social-data-app"
 
       - name: Generate application properties file for zaqlick
         env:
@@ -119,6 +120,16 @@ jobs:
           if [ -f zaqlick-app/application.yaml.template ]; then
             envsubst < zaqlick-app/application.yaml.template > zaqlick-app/application.yaml
           fi
+      - name: Generate application properties file for zaqlick
+        env:
+          ZAQLICK_DB_URL: ${{ vars.SOCIAL_DATA_DB_URL }}
+          ZAQLICK_DB_USER: ${{ secrets.SOCIAL_DATA_DB_USER }}
+          ZAQLICK_DB_PASSWORD: ${{ secrets.SOCIAL_DATA_DB_PASSWORD }}
+        run: |
+          if [ -f zaqlick-app/application.yaml.template ]; then
+            envsubst < social-data-app/application.yaml.template > social-data-app/application.yaml
+          fi
+      
 
       - name: Copy docker-compose.yml and application properties files to server
         run: |
@@ -126,6 +137,9 @@ jobs:
           scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./.env ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/.env
           if [ -f ./zaqlick-app/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./zaqlick-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/zaqlick-app/application.yaml
+          fi
+          if [ -f ./social-data-app/application.yaml ]; then
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./social-data-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/social-data-app/application.yaml
           fi
           if [ -f ./stock-app/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./stock-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/stock-app/application.yaml

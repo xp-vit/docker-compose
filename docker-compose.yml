@@ -55,7 +55,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
     volumes:
-      - ./stock-app/application.yaml:/workspace/application-prod.yaml
+      - ./social-data-app/application.yaml:/workspace/application-prod.yaml
 
   zaqlick-app:
     container_name: zaqlick-app

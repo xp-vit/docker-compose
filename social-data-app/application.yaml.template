@@ -1,0 +1,6 @@
+---
+spring:
+  datasource:
+    url: "$SOCIAL_DATA_DB_URL"
+    username: "$SOCIAL_DATA_DB_USER"
+    password: "$SOCIAL_DATA_DB_PASSWORD"
