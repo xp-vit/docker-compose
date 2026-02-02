@@ -3,6 +3,9 @@ services:
     container_name: traefik
     image: traefik:v3.6
     command:
+      - --log.level=INFO
+      - --accesslog=true
+      - --api.dashboard=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
       - --providers.docker=true
