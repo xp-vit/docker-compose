@@ -4,9 +4,9 @@ spring:
     url: "$ZAQLICK_DB_URL"
     username: "$ZAQLICK_DB_USER"
     password: "$ZAQLICK_DB_PASSWORD"
-ai:
-  openai:
-    api-key: "$OPENAI_API_KEY"
+  ai:
+    openai:
+      api-key: "$OPENAI_API_KEY"
 app:
   base-url: "$ZAQLICK_APP_BASE_URL"
 mailgun:
