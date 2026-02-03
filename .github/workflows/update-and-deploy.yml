@@ -121,13 +121,13 @@ jobs:
           if [ -f zaqlick-app/application.yaml.template ]; then
             envsubst < zaqlick-app/application.yaml.template > zaqlick-app/application.yaml
           fi
-      - name: Generate application properties file for zaqlick
+      - name: Generate application properties file for social-data
         env:
           SOCIAL_DATA_DB_URL: ${{ vars.SOCIAL_DATA_DB_URL }}
           SOCIAL_DATA_DB_USER: ${{ secrets.SOCIAL_DATA_DB_USER }}
           SOCIAL_DATA_DB_PASSWORD: ${{ secrets.SOCIAL_DATA_DB_PASSWORD }}
         run: |
-          if [ -f zaqlick-app/application.yaml.template ]; then
+          if [ -f social-data-app/application.yaml.template ]; then
             envsubst < social-data-app/application.yaml.template > social-data-app/application.yaml
           fi
       
