@@ -6,7 +6,7 @@ spring:
     password: "$ZAQLICK_DB_PASSWORD"
 ai:
   openai:
-    api-key:"$OPENAI_API_KEY"
+    api-key: "$OPENAI_API_KEY"
 app:
   base-url: "$ZAQLICK_APP_BASE_URL"
 mailgun:
