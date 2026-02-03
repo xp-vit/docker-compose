@@ -116,6 +116,7 @@ jobs:
           ZAQLICK_MAILGUN_API_KEY: ${{ secrets.ZAQLICK_MAILGUN_API_KEY }}
           ZAQLICK_MAILGUN_DOMAIN: ${{ vars.ZAQLICK_MAILGUN_DOMAIN }}
           ZAQLICK_MAILGUN_FROM_EMAIL: ${{ vars.ZAQLICK_MAILGUN_FROM_EMAIL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           if [ -f zaqlick-app/application.yaml.template ]; then
             envsubst < zaqlick-app/application.yaml.template > zaqlick-app/application.yaml
