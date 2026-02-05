@@ -91,6 +91,7 @@ services:
       - "traefik.http.routers.zaqlick-jobs-http.middlewares=redirect-to-https"
     ports:
       - "8889:8080"
+      - "8000:8000"
     networks:
       - web
     restart: unless-stopped
