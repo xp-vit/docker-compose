@@ -79,15 +79,15 @@ services:
       - "traefik.http.services.zaqlick-jobs.loadbalancer.server.port=8000"
       # Basic Auth middleware for jobs dashboard
       # Generate password: htpasswd -nbB admin "yourpassword" | sed -e 's/\$/\$\$/g'
-      - "traefik.http.middlewares.jobs-auth.basicauth.users=admin:$$2y$$05$$3eU.e76zlszbPRJ8ZKaxoeW2NC.m2fK1ZoFt8OsgdlBaIxIxb/xUa"
+      - "traefik.http.middlewares.jobs-auth.basicauth.users=admin:$$2y$$05$$.4LyiFf9.IjZ95ITsw05g.W6xN7rKysVJGmggMWTk.HmLDxS1Ll3O"
       # HTTPS router for jobs dashboard (with Basic Auth)
-      - "traefik.http.routers.zaqlick-jobs.rule=Host(`jobs.zaqliq.com`)"
+      - "traefik.http.routers.zaqlick-jobs.rule=Host(`jobs.zaqlick.com`)"
       - "traefik.http.routers.zaqlick-jobs.entrypoints=websecure"
       - "traefik.http.routers.zaqlick-jobs.tls.certresolver=le"
       - "traefik.http.routers.zaqlick-jobs.service=zaqlick-jobs"
       - "traefik.http.routers.zaqlick-jobs.middlewares=jobs-auth"
       # HTTP router for jobs dashboard (redirects to HTTPS)
-      - "traefik.http.routers.zaqlick-jobs-http.rule=Host(`jobs.zaqliq.com`)"
+      - "traefik.http.routers.zaqlick-jobs-http.rule=Host(`jobs.zaqlick.com`)"
       - "traefik.http.routers.zaqlick-jobs-http.entrypoints=web"
       - "traefik.http.routers.zaqlick-jobs-http.middlewares=redirect-to-https"
       - "traefik.http.routers.zaqlick-jobs-http.service=zaqlick-jobs"
