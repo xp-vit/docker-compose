@@ -96,7 +96,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
     volumes:
-      - ./zaqlick-app/application.yaml:/workspace/application-prod.yaml
+      - ./zaqlick-app/application.yaml:/app/resources/application.properties
 
 networks:
   web:
