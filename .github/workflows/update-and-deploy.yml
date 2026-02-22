@@ -198,7 +198,7 @@ jobs:
           fi
 
           echo "Cleaning up unused images..."
-          docker image prune -f
+          docker image prune -af
 
           echo "Deployment completed successfully!"
           EOF
