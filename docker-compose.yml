@@ -63,12 +63,6 @@ services:
       SPRING_PROFILES_ACTIVE: prod
     volumes:
       - ./social-data-app/application.yaml:/workspace/application-prod.yaml
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health 2>/dev/null || wget -q -O /dev/null http://localhost:8080/actuator/health 2>/dev/null || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
   zaqlick-app:
     image: api.repoflow.io/xpvitblr-504/zaqlick-app/zaqlick-app:${ZAQLICK_APP_VERSION:-latest}
@@ -116,12 +110,6 @@ services:
       SPRING_PROFILES_ACTIVE: prod
     volumes:
       - ./zaqlick-app/application.yaml:/workspace/application-prod.yaml
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health 2>/dev/null || wget -q -O /dev/null http://localhost:8080/actuator/health 2>/dev/null || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
 networks:
   web:
