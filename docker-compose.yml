@@ -7,9 +7,9 @@ services:
       - --api.dashboard=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      - --providers.docker.swarmMode=true
-      - --providers.docker.exposedbydefault=false
-      - --providers.docker.network=traefik_web
+      - --providers.swarm=true
+      - --providers.swarm.exposedbydefault=false
+      - --providers.swarm.network=traefik_web
       - --certificatesresolvers.le.acme.email=xp.vit.blr@gmail.com
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.le.acme.httpchallenge=true
@@ -45,7 +45,7 @@ services:
         order: start-first
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=traefik_web"
+        - "traefik.swarm.network=traefik_web"
         # Service definition
         - "traefik.http.services.parser.loadbalancer.server.port=8080"
         # HTTPS router
@@ -83,7 +83,7 @@ services:
         order: start-first
       labels:
         - "traefik.enable=true"
-        - "traefik.docker.network=traefik_web"
+        - "traefik.swarm.network=traefik_web"
         # Service definition for main app (port 8080)
         - "traefik.http.services.zaqlick.loadbalancer.server.port=8080"
         # HTTPS router for main app
