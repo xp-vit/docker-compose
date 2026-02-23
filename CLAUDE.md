@@ -71,3 +71,9 @@ From other repos, use `repository_dispatch`:
 ## Network
 
 All services on `traefik_web` overlay network (Docker Swarm). Traefik routes by hostname using labels under `deploy.labels`.
+
+## Healthchecks
+
+The Spring Boot app images (`zaqlick-app`, `zaqlick-social-data-parser`) are built with Paketo buildpacks using a distroless/tiny base image — **no `/bin/sh`**. This means `CMD-SHELL` healthchecks will always fail with `exec: "/bin/sh": no such file or directory`.
+
+Healthchecks are intentionally omitted from these services. Swarm's `update_config.order: start-first` still provides zero-downtime rolling updates — the new container starts and becomes "running" before the old one is stopped. If healthcheck support is needed in the future, add `curl` or a dedicated health binary to the app's Dockerfile.
