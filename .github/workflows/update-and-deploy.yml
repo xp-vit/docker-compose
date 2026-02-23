@@ -156,46 +156,16 @@ jobs:
             "docker login -u \"${DOCKER_USER}\" -p \"${DOCKER_PASSWORD}\" \"${DOCKER_HOST}\""
 
       - name: Deploy on EC2
-        env:
-          VERSION_VAR: ${{ steps.vars.outputs.version_var }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 "${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}" bash -s "$VERSION_VAR" <<'EOF'
+          ssh -i ~/.ssh/id_ed25519 "${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}" bash -s <<'EOF'
           set -e
           cd ~/deploy
-          VERSION_VAR="$1"
 
-          # Map version variables to docker-compose service names
-          get_service_name() {
-            case "$1" in
-              ZAQLICK_APP_VERSION) echo "zaqlick-app" ;;
-              ZAQLICK_SOCIAL_DATA_PARSER_VERSION) echo "zaqlick-social-data-parser" ;;
-              TRAEFIK_VERSION) echo "traefik" ;;
-              *) echo "" ;;
-            esac
-          }
+          # Initialize Swarm if not already active
+          docker info --format '{{.Swarm.LocalNodeState}}' | grep -q "active" || docker swarm init
 
-          SERVICE_NAME=$(get_service_name "$VERSION_VAR")
-
-          if [ -n "$SERVICE_NAME" ]; then
-            echo "Updating only service: $SERVICE_NAME"
-            
-            echo "Pulling latest image for $SERVICE_NAME..."
-            docker compose pull "$SERVICE_NAME"
-            
-            echo "Restarting $SERVICE_NAME..."
-            docker compose up -d --no-deps --force-recreate "$SERVICE_NAME"
-          else
-            echo "No specific service to update, restarting all services..."
-            
-            echo "Stopping existing containers..."
-            docker compose down --remove-orphans
-
-            echo "Pulling latest images..."
-            docker compose pull
-
-            echo "Starting services..."
-            docker compose up -d
-          fi
+          echo "Deploying stack..."
+          docker stack deploy --with-registry-auth --compose-file docker-compose.yml patotski
 
           echo "Cleaning up unused images..."
           docker image prune -af

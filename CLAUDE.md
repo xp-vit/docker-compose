@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Docker Compose deployment orchestration for multiple microservices on EC2. Uses Traefik as reverse proxy with automatic SSL, and GitHub Actions for CI/CD.
+Docker Swarm deployment orchestration for multiple microservices on a single EC2 node. Uses Traefik as reverse proxy with automatic SSL, and GitHub Actions for CI/CD. Stack name: `patotski`.
 
 ## Services
 
@@ -15,17 +15,19 @@ Docker Compose deployment orchestration for multiple microservices on EC2. Uses 
 ## Common Commands
 
 ```bash
-# Start all services
-docker compose up -d
+# Deploy/update the stack (idempotent)
+docker stack deploy --with-registry-auth -c docker-compose.yml patotski
 
-# Restart a specific service
-docker compose up -d --no-deps --force-recreate zaqlick-app
-
-# Pull latest images and redeploy
-docker compose pull && docker compose up -d
+# Force update a specific service
+docker service update --force patotski_zaqlick-app
 
 # View logs
-docker compose logs -f zaqlick-app
+docker service logs -f patotski_zaqlick-app
+
+# Check stack and service status
+docker stack ls
+docker service ls
+docker service ps patotski_zaqlick-app
 
 # Clean up unused images
 docker image prune -f
@@ -68,4 +70,4 @@ From other repos, use `repository_dispatch`:
 
 ## Network
 
-All services on `traefik_web` bridge network. Traefik routes by hostname using Docker labels.
+All services on `traefik_web` overlay network (Docker Swarm). Traefik routes by hostname using labels under `deploy.labels`.

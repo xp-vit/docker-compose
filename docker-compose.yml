@@ -1,25 +1,28 @@
 services:
   traefik:
-    container_name: traefik
-    image: traefik:v3.6
+    image: traefik:${TRAEFIK_VERSION:-v3.6}
     command:
       - --log.level=DEBUG
       - --accesslog=true
       - --api.dashboard=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      - --providers.docker=true
+      - --providers.docker.swarmMode=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=traefik_web
       - --certificatesresolvers.le.acme.email=xp.vit.blr@gmail.com
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.le.acme.httpchallenge=true
       - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
-    labels:
-      - "traefik.enable=true"
-      # Define global redirect middleware
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        # Define global redirect middleware
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
     ports:
       - "80:80"
       - "443:443"
@@ -28,77 +31,100 @@ services:
       - ./letsencrypt:/letsencrypt
     networks:
       - web
-    restart: unless-stopped
 
   zaqlick-social-data-parser:
-    container_name: data-parser
     image: xpvit/zaqlick-social-data-parser:${ZAQLICK_SOCIAL_DATA_PARSER_VERSION:-latest}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik_web"
-      # Service definition
-      - "traefik.http.services.parser.loadbalancer.server.port=8080"
-      # HTTPS router
-      - "traefik.http.routers.parser.rule=Host(`data.patotski.com`)"
-      - "traefik.http.routers.parser.entrypoints=websecure"
-      - "traefik.http.routers.parser.tls.certresolver=le"
-      - "traefik.http.routers.parser.service=parser"
-      # HTTP router (redirects to HTTPS)
-      - "traefik.http.routers.parser-http.rule=Host(`data.patotski.com`)"
-      - "traefik.http.routers.parser-http.entrypoints=web"
-      - "traefik.http.routers.parser-http.middlewares=redirect-to-https"
-    ports:
-      - "8080:8080"
+    deploy:
+      restart_policy:
+        condition: any
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+      rollback_config:
+        order: start-first
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik_web"
+        # Service definition
+        - "traefik.http.services.parser.loadbalancer.server.port=8080"
+        # HTTPS router
+        - "traefik.http.routers.parser.rule=Host(`data.patotski.com`)"
+        - "traefik.http.routers.parser.entrypoints=websecure"
+        - "traefik.http.routers.parser.tls.certresolver=le"
+        - "traefik.http.routers.parser.service=parser"
+        # HTTP router (redirects to HTTPS)
+        - "traefik.http.routers.parser-http.rule=Host(`data.patotski.com`)"
+        - "traefik.http.routers.parser-http.entrypoints=web"
+        - "traefik.http.routers.parser-http.middlewares=redirect-to-https"
     networks:
       - web
-    restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
     volumes:
       - ./social-data-app/application.yaml:/workspace/application-prod.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health 2>/dev/null || wget -q -O /dev/null http://localhost:8080/actuator/health 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   zaqlick-app:
-    container_name: zaqlick-app
     image: api.repoflow.io/xpvitblr-504/zaqlick-app/zaqlick-app:${ZAQLICK_APP_VERSION:-latest}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik_web"
-      # Service definition for main app (port 8080)
-      - "traefik.http.services.zaqlick.loadbalancer.server.port=8080"
-      # HTTPS router for main app
-      - "traefik.http.routers.zaqlick.rule=Host(`app2.zaqlick.com`)"
-      - "traefik.http.routers.zaqlick.entrypoints=websecure"
-      - "traefik.http.routers.zaqlick.tls.certresolver=le"
-      - "traefik.http.routers.zaqlick.service=zaqlick"
-      # HTTP router for main app (redirects to HTTPS)
-      - "traefik.http.routers.zaqlick-http.rule=Host(`app2.zaqlick.com`)"
-      - "traefik.http.routers.zaqlick-http.entrypoints=web"
-      - "traefik.http.routers.zaqlick-http.middlewares=redirect-to-https"
-      - "traefik.http.routers.zaqlick-http.service=zaqlick"
-      # Service definition for jobs dashboard (port 8000)
-      - "traefik.http.services.zaqlick-jobs.loadbalancer.server.port=8000"
-      # HTTPS router for jobs dashboard
-      - "traefik.http.routers.zaqlick-jobs.rule=Host(`jobs.zaqlick.com`)"
-      - "traefik.http.routers.zaqlick-jobs.entrypoints=websecure"
-      - "traefik.http.routers.zaqlick-jobs.tls.certresolver=le"
-      - "traefik.http.routers.zaqlick-jobs.service=zaqlick-jobs"
-      # HTTP router for jobs dashboard (redirects to HTTPS)
-      - "traefik.http.routers.zaqlick-jobs-http.rule=Host(`jobs.zaqlick.com`)"
-      - "traefik.http.routers.zaqlick-jobs-http.entrypoints=web"
-      - "traefik.http.routers.zaqlick-jobs-http.middlewares=redirect-to-https"
-      - "traefik.http.routers.zaqlick-jobs-http.service=zaqlick-jobs"
+    deploy:
+      restart_policy:
+        condition: any
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+      rollback_config:
+        order: start-first
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik_web"
+        # Service definition for main app (port 8080)
+        - "traefik.http.services.zaqlick.loadbalancer.server.port=8080"
+        # HTTPS router for main app
+        - "traefik.http.routers.zaqlick.rule=Host(`app2.zaqlick.com`)"
+        - "traefik.http.routers.zaqlick.entrypoints=websecure"
+        - "traefik.http.routers.zaqlick.tls.certresolver=le"
+        - "traefik.http.routers.zaqlick.service=zaqlick"
+        # HTTP router for main app (redirects to HTTPS)
+        - "traefik.http.routers.zaqlick-http.rule=Host(`app2.zaqlick.com`)"
+        - "traefik.http.routers.zaqlick-http.entrypoints=web"
+        - "traefik.http.routers.zaqlick-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.zaqlick-http.service=zaqlick"
+        # Service definition for jobs dashboard (port 8000)
+        - "traefik.http.services.zaqlick-jobs.loadbalancer.server.port=8000"
+        # HTTPS router for jobs dashboard
+        - "traefik.http.routers.zaqlick-jobs.rule=Host(`jobs.zaqlick.com`)"
+        - "traefik.http.routers.zaqlick-jobs.entrypoints=websecure"
+        - "traefik.http.routers.zaqlick-jobs.tls.certresolver=le"
+        - "traefik.http.routers.zaqlick-jobs.service=zaqlick-jobs"
+        # HTTP router for jobs dashboard (redirects to HTTPS)
+        - "traefik.http.routers.zaqlick-jobs-http.rule=Host(`jobs.zaqlick.com`)"
+        - "traefik.http.routers.zaqlick-jobs-http.entrypoints=web"
+        - "traefik.http.routers.zaqlick-jobs-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.zaqlick-jobs-http.service=zaqlick-jobs"
     ports:
-      - "8889:8080"
       - "8000:8000"
     networks:
       - web
-    restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
     volumes:
       - ./zaqlick-app/application.yaml:/workspace/application-prod.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/actuator/health 2>/dev/null || wget -q -O /dev/null http://localhost:8080/actuator/health 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 networks:
   web:
     name: traefik_web
-    driver: bridge
+    driver: overlay
+    attachable: true
