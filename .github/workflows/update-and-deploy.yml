@@ -164,6 +164,13 @@ jobs:
           # Initialize Swarm if not already active
           docker info --format '{{.Swarm.LocalNodeState}}' | grep -qx "active" || docker swarm init
 
+          # One-time migration: remove old bridge network if it conflicts with the new overlay
+          if docker network inspect traefik_web --format '{{.Driver}}' 2>/dev/null | grep -qx "bridge"; then
+            echo "Removing old bridge network for Swarm migration..."
+            docker ps -aq --filter "network=traefik_web" | xargs -r docker rm -f 2>/dev/null || true
+            docker network rm traefik_web 2>/dev/null || true
+          fi
+
           echo "Deploying stack..."
           docker stack deploy --with-registry-auth --compose-file docker-compose.yml patotski
 
