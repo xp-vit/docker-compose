@@ -162,7 +162,7 @@ jobs:
           cd ~/deploy
 
           # Initialize Swarm if not already active
-          docker info --format '{{.Swarm.LocalNodeState}}' | grep -q "active" || docker swarm init
+          docker info --format '{{.Swarm.LocalNodeState}}' | grep -qx "active" || docker swarm init
 
           echo "Deploying stack..."
           docker stack deploy --with-registry-auth --compose-file docker-compose.yml patotski
