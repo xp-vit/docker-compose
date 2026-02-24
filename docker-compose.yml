@@ -84,12 +84,12 @@ services:
         # Service definition for main app (port 8080)
         - "traefik.http.services.zaqlick.loadbalancer.server.port=8080"
         # HTTPS router for main app
-        - "traefik.http.routers.zaqlick.rule=Host(`app.zaqlick.com`) || Host(`app2.zaqlick.com`)"
+        - "traefik.http.routers.zaqlick.rule=Host(`app.zaqlick.com`)"
         - "traefik.http.routers.zaqlick.entrypoints=websecure"
         - "traefik.http.routers.zaqlick.tls.certresolver=le"
         - "traefik.http.routers.zaqlick.service=zaqlick"
         # HTTP router for main app (redirects to HTTPS)
-        - "traefik.http.routers.zaqlick-http.rule=Host(`app.zaqlick.com`) || Host(`app2.zaqlick.com`)"
+        - "traefik.http.routers.zaqlick-http.rule=Host(`app.zaqlick.com`)"
         - "traefik.http.routers.zaqlick-http.entrypoints=web"
         - "traefik.http.routers.zaqlick-http.middlewares=redirect-to-https"
         - "traefik.http.routers.zaqlick-http.service=zaqlick"
