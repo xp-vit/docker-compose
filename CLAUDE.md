@@ -9,7 +9,7 @@ Docker Swarm deployment orchestration for multiple microservices on a single EC2
 ## Services
 
 - **traefik** - Reverse proxy with Let's Encrypt SSL (ports 80, 443)
-- **zaqlick-app** - Main application at `app2.zaqlick.com` (Spring Boot)
+- **zaqlick-app** - Main application at `app.zaqlick.com` (Spring Boot)
 - **zaqlick-social-data-parser** - Data parser at `data.patotski.com` (Spring Boot)
 
 ## Common Commands
@@ -76,4 +76,12 @@ All services on `traefik_web` overlay network (Docker Swarm). Traefik routes by 
 
 The Spring Boot app images (`zaqlick-app`, `zaqlick-social-data-parser`) are built with Paketo buildpacks using a distroless/tiny base image — **no `/bin/sh`**. This means `CMD-SHELL` healthchecks will always fail with `exec: "/bin/sh": no such file or directory`.
 
-Healthchecks are intentionally omitted from these services. Swarm's `update_config.order: start-first` still provides zero-downtime rolling updates — the new container starts and becomes "running" before the old one is stopped. If healthcheck support is needed in the future, add `curl` or a dedicated health binary to the app's Dockerfile.
+Healthchecks are intentionally omitted from these services. If healthcheck support is needed in the future, add `curl` or a dedicated health binary to the app's Dockerfile.
+
+## Rolling Update Order
+
+`zaqlick-app` uses `update_config.order: stop-first` (and `rollback_config.order: stop-first`). Do **not** change this to `start-first`.
+
+**Why:** With 2 replicas, 2 nodes, and `max_replicas_per_node: 1`, `start-first` causes a scheduling deadlock — Swarm cannot place the new container before stopping the old one because both nodes are always at capacity. `stop-first` frees the node slot first, at the cost of briefly running 1 replica during deploys.
+
+If a 3rd node is ever added, switching to `start-first` would restore true zero-downtime rolling updates.
