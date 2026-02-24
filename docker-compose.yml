@@ -67,6 +67,7 @@ services:
   zaqlick-app:
     image: api.repoflow.io/xpvitblr-504/zaqlick-app/zaqlick-app:${ZAQLICK_APP_VERSION:-latest}
     deploy:
+      replicas: 2
       restart_policy:
         condition: any
       update_config:
@@ -75,6 +76,8 @@ services:
         delay: 10s
       rollback_config:
         order: start-first
+      placement:
+        max_replicas_per_node: 1
       labels:
         - "traefik.enable=true"
         - "traefik.swarm.network=traefik_web"
