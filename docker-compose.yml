@@ -114,6 +114,38 @@ services:
     volumes:
       - ./zaqlick-app/application.yaml:/workspace/application-prod.yaml
 
+  funds-comparator:
+    image: api.repoflow.io/xpvitblr-504/funds-comparator/library/main-app:${FUNDS_COMPARATOR_VERSION:-latest}
+    deploy:
+      restart_policy:
+        condition: any
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 10s
+      rollback_config:
+        order: start-first
+      labels:
+        - "traefik.enable=true"
+        - "traefik.swarm.network=traefik_web"
+        # Service definition
+        - "traefik.http.services.funds-comparator.loadbalancer.server.port=8080"
+        # HTTPS router
+        - "traefik.http.routers.funds-comparator.rule=Host(`funds.wealthypot.com`)"
+        - "traefik.http.routers.funds-comparator.entrypoints=websecure"
+        - "traefik.http.routers.funds-comparator.tls.certresolver=le"
+        - "traefik.http.routers.funds-comparator.service=funds-comparator"
+        # HTTP router (redirects to HTTPS)
+        - "traefik.http.routers.funds-comparator-http.rule=Host(`funds.wealthypot.com`)"
+        - "traefik.http.routers.funds-comparator-http.entrypoints=web"
+        - "traefik.http.routers.funds-comparator-http.middlewares=redirect-to-https"
+    networks:
+      - web
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    volumes:
+      - ./funds-comparator/application.yaml:/workspace/application-prod.yaml
+
 networks:
   web:
     name: traefik_web

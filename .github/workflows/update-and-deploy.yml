@@ -110,9 +110,9 @@ jobs:
 
       - name: Ensure directories exist on server
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/stock-app /home/${{ vars.EC2_USER }}/deploy/social-data-app"
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/social-data-app"
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/social-data-app"
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/stock-app /home/${{ vars.EC2_USER }}/deploy/social-data-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/social-data-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/social-data-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
 
       - name: Generate application properties file for zaqlick
         env:
@@ -137,7 +137,17 @@ jobs:
           if [ -f social-data-app/application.yaml.template ]; then
             envsubst < social-data-app/application.yaml.template > social-data-app/application.yaml
           fi
-      
+
+      - name: Generate application properties file for funds-comparator
+        env:
+          FUNDS_COMPARATOR_DB_URL: ${{ vars.FUNDS_COMPARATOR_DB_URL }}
+          FUNDS_COMPARATOR_DB_USER: ${{ secrets.FUNDS_COMPARATOR_DB_USER }}
+          FUNDS_COMPARATOR_DB_PASSWORD: ${{ secrets.FUNDS_COMPARATOR_DB_PASSWORD }}
+        run: |
+          if [ -f funds-comparator/application.yaml.template ]; then
+            envsubst < funds-comparator/application.yaml.template > funds-comparator/application.yaml
+          fi
+
 
       - name: Copy docker-compose.yml and application properties files to server
         run: |
@@ -152,6 +162,9 @@ jobs:
           if [ -f ./stock-app/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./stock-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/stock-app/application.yaml
           fi
+          if [ -f ./funds-comparator/application.yaml ]; then
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./funds-comparator/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/funds-comparator/application.yaml
+          fi
 
       - name: Copy application config to worker nodes
         run: |
@@ -162,6 +175,10 @@ jobs:
           if [ -f ./social-data-app/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./social-data-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }}:/home/${{ vars.EC2_USER }}/deploy/social-data-app/application.yaml
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./social-data-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }}:/home/${{ vars.EC2_USER }}/deploy/social-data-app/application.yaml
+          fi
+          if [ -f ./funds-comparator/application.yaml ]; then
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./funds-comparator/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }}:/home/${{ vars.EC2_USER }}/deploy/funds-comparator/application.yaml
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./funds-comparator/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }}:/home/${{ vars.EC2_USER }}/deploy/funds-comparator/application.yaml
           fi
 
       - name: Global Docker login on server

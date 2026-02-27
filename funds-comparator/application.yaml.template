@@ -1,0 +1,6 @@
+---
+spring:
+  datasource:
+    url: "$FUNDS_COMPARATOR_DB_URL"
+    username: "$FUNDS_COMPARATOR_DB_USER"
+    password: "$FUNDS_COMPARATOR_DB_PASSWORD"
