@@ -71,11 +71,11 @@ services:
       restart_policy:
         condition: any
       update_config:
-        order: stop-first
+        order: start-first
         failure_action: rollback
         delay: 10s
       rollback_config:
-        order: stop-first
+        order: start-first
       placement:
         max_replicas_per_node: 1
       labels:

@@ -105,6 +105,7 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${{ vars.EC2_HOST }}" >> ~/.ssh/known_hosts
           ssh-keyscan -H "${{ vars.EC2_HOST_2 }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ vars.EC2_HOST_3 }}" >> ~/.ssh/known_hosts
 
       - name: Ensure directories exist on server
         run: |
@@ -112,6 +113,7 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/stock-app"
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/social-data-app"
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app"
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app"
 
       - name: Generate application properties file for zaqlick
         env:
@@ -152,10 +154,11 @@ jobs:
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./stock-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/stock-app/application.yaml
           fi
 
-      - name: Copy application config to worker node (zaqlick-app-2)
+      - name: Copy application config to worker nodes
         run: |
           if [ -f ./zaqlick-app/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./zaqlick-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }}:/home/${{ vars.EC2_USER }}/deploy/zaqlick-app/application.yaml
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./zaqlick-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }}:/home/${{ vars.EC2_USER }}/deploy/zaqlick-app/application.yaml
           fi
 
       - name: Global Docker login on server
