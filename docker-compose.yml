@@ -139,6 +139,7 @@ services:
         - "traefik.http.routers.funds-comparator-http.rule=Host(`funds.wealthypot.com`)"
         - "traefik.http.routers.funds-comparator-http.entrypoints=web"
         - "traefik.http.routers.funds-comparator-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.funds-comparator-http.service=funds-comparator"
     networks:
       - web
     environment:
