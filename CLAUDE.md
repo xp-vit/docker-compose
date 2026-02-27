@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Docker Swarm deployment orchestration for multiple microservices on a single EC2 node. Uses Traefik as reverse proxy with automatic SSL, and GitHub Actions for CI/CD. Stack name: `patotski`.
+Docker Swarm deployment orchestration for multiple microservices across 3 EC2 nodes. Uses Traefik as reverse proxy with automatic SSL, and GitHub Actions for CI/CD. Stack name: `patotski`.
 
 ## Services
 
@@ -80,8 +80,18 @@ Healthchecks are intentionally omitted from these services. If healthcheck suppo
 
 ## Rolling Update Order
 
-`zaqlick-app` uses `update_config.order: stop-first` (and `rollback_config.order: stop-first`). Do **not** change this to `start-first`.
+`zaqlick-app` uses `update_config.order: start-first` (and `rollback_config.order: start-first`) for true zero-downtime rolling updates.
 
-**Why:** With 2 replicas, 2 nodes, and `max_replicas_per_node: 1`, `start-first` causes a scheduling deadlock — Swarm cannot place the new container before stopping the old one because both nodes are always at capacity. `stop-first` frees the node slot first, at the cost of briefly running 1 replica during deploys.
+**Why this works:** With 3 nodes, 2 replicas, and `max_replicas_per_node: 1`, there is always a free node available to start the new container before stopping the old one.
 
-If a 3rd node is ever added, switching to `start-first` would restore true zero-downtime rolling updates.
+**If a node is removed** and you're back to 2 nodes, `start-first` will cause a scheduling deadlock — switch to `stop-first` until a 3rd node is available again.
+
+## Swarm Nodes
+
+| Host alias     | Role    |
+|----------------|---------|
+| `zaqlick-app`  | Manager |
+| `zaqlick-app-2`| Worker  |
+| `zaqlick-app-3`| Worker  |
+
+The workflow provisions all 3 nodes via `EC2_HOST`, `EC2_HOST_2`, `EC2_HOST_3` GitHub Actions variables.
