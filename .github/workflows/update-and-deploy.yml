@@ -84,6 +84,7 @@ jobs:
           else
             git add .env
             git commit -m "chore: update ${{ steps.vars.outputs.version_var }} to ${{ steps.vars.outputs.image_tag }}"
+            git pull --rebase
             git push
           fi
 
