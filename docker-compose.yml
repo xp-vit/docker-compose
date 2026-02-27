@@ -18,11 +18,6 @@ services:
       placement:
         constraints:
           - node.role == manager
-      labels:
-        - "traefik.enable=true"
-        # Define global redirect middleware
-        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-        - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
     ports:
       - "80:80"
       - "443:443"
@@ -81,6 +76,9 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.swarm.network=traefik_web"
+        # Global redirect middleware (defined here so Traefik picks it up reliably)
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
         # Service definition for main app (port 8080)
         - "traefik.http.services.zaqlick.loadbalancer.server.port=8080"
         # HTTPS router for main app
