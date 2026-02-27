@@ -207,6 +207,7 @@ jobs:
           fi
 
           echo "Deploying stack..."
+          set -a && source .env && set +a
           docker stack deploy --with-registry-auth --compose-file docker-compose.yml patotski
 
           echo "Cleaning up unused images..."
