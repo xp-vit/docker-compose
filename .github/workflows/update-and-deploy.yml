@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       version_var:
-        description: 'Environment variable name (e.g., ZAQLICK_SOCIAL_DATA_PARSER_VERSION). Leave empty to just redeploy.'
+        description: 'Environment variable name (e.g., ZAQLICK_APP_VERSION). Leave empty to just redeploy.'
         required: false
         type: string
       image_tag:
@@ -110,9 +110,9 @@ jobs:
 
       - name: Ensure directories exist on server
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/stock-app /home/${{ vars.EC2_USER }}/deploy/social-data-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/social-data-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/social-data-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
 
       - name: Generate application properties file for zaqlick
         env:
@@ -128,16 +128,6 @@ jobs:
           if [ -f zaqlick-app/application.yaml.template ]; then
             envsubst < zaqlick-app/application.yaml.template > zaqlick-app/application.yaml
           fi
-      - name: Generate application properties file for social-data
-        env:
-          SOCIAL_DATA_DB_URL: ${{ vars.SOCIAL_DATA_DB_URL }}
-          SOCIAL_DATA_DB_USER: ${{ secrets.SOCIAL_DATA_DB_USER }}
-          SOCIAL_DATA_DB_PASSWORD: ${{ secrets.SOCIAL_DATA_DB_PASSWORD }}
-        run: |
-          if [ -f social-data-app/application.yaml.template ]; then
-            envsubst < social-data-app/application.yaml.template > social-data-app/application.yaml
-          fi
-
       - name: Generate application properties file for funds-comparator
         env:
           FUNDS_COMPARATOR_DB_URL: ${{ vars.FUNDS_COMPARATOR_DB_URL }}
@@ -156,12 +146,6 @@ jobs:
           if [ -f ./zaqlick-app/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./zaqlick-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/zaqlick-app/application.yaml
           fi
-          if [ -f ./social-data-app/application.yaml ]; then
-            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./social-data-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/social-data-app/application.yaml
-          fi
-          if [ -f ./stock-app/application.yaml ]; then
-            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./stock-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/stock-app/application.yaml
-          fi
           if [ -f ./funds-comparator/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./funds-comparator/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/funds-comparator/application.yaml
           fi
@@ -171,10 +155,6 @@ jobs:
           if [ -f ./zaqlick-app/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./zaqlick-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }}:/home/${{ vars.EC2_USER }}/deploy/zaqlick-app/application.yaml
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./zaqlick-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }}:/home/${{ vars.EC2_USER }}/deploy/zaqlick-app/application.yaml
-          fi
-          if [ -f ./social-data-app/application.yaml ]; then
-            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./social-data-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }}:/home/${{ vars.EC2_USER }}/deploy/social-data-app/application.yaml
-            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./social-data-app/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }}:/home/${{ vars.EC2_USER }}/deploy/social-data-app/application.yaml
           fi
           if [ -f ./funds-comparator/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./funds-comparator/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }}:/home/${{ vars.EC2_USER }}/deploy/funds-comparator/application.yaml

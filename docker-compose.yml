@@ -27,38 +27,6 @@ services:
     networks:
       - web
 
-  zaqlick-social-data-parser:
-    image: xpvit/zaqlick-social-data-parser:${ZAQLICK_SOCIAL_DATA_PARSER_VERSION:-latest}
-    deploy:
-      restart_policy:
-        condition: any
-      update_config:
-        order: start-first
-        failure_action: rollback
-        delay: 10s
-      rollback_config:
-        order: start-first
-      labels:
-        - "traefik.enable=true"
-        - "traefik.swarm.network=traefik_web"
-        # Service definition
-        - "traefik.http.services.parser.loadbalancer.server.port=8080"
-        # HTTPS router
-        - "traefik.http.routers.parser.rule=Host(`data.patotski.com`)"
-        - "traefik.http.routers.parser.entrypoints=websecure"
-        - "traefik.http.routers.parser.tls.certresolver=le"
-        - "traefik.http.routers.parser.service=parser"
-        # HTTP router (redirects to HTTPS)
-        - "traefik.http.routers.parser-http.rule=Host(`data.patotski.com`)"
-        - "traefik.http.routers.parser-http.entrypoints=web"
-        - "traefik.http.routers.parser-http.middlewares=redirect-to-https"
-    networks:
-      - web
-    environment:
-      SPRING_PROFILES_ACTIVE: prod
-    volumes:
-      - ./social-data-app/application.yaml:/workspace/application-prod.yaml
-
   zaqlick-app:
     image: api.repoflow.io/xpvitblr-504/zaqlick-app/zaqlick-app:${ZAQLICK_APP_VERSION:-latest}
     deploy:
@@ -115,6 +83,7 @@ services:
   funds-comparator:
     image: api.repoflow.io/xpvitblr-504/funds-comparator/library/main-app:${FUNDS_COMPARATOR_VERSION:-latest}
     deploy:
+      replicas: 2
       restart_policy:
         condition: any
       update_config:
@@ -123,6 +92,8 @@ services:
         delay: 10s
       rollback_config:
         order: start-first
+      placement:
+        max_replicas_per_node: 1
       labels:
         - "traefik.enable=true"
         - "traefik.swarm.network=traefik_web"
