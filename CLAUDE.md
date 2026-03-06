@@ -10,8 +10,7 @@ Docker Swarm deployment orchestration for multiple microservices across 3 EC2 no
 
 - **traefik** - Reverse proxy with Let's Encrypt SSL (ports 80, 443)
 - **zaqlick-app** - Main application at `app.zaqlick.com` (Spring Boot)
-- **zaqlick-social-data-parser** - Data parser at `data.patotski.com` (Spring Boot)
-- **funds-comparator** - Funds comparison tool at `funds.wealthypot.com` (Spring Boot + Vaadin/Hilla)
+- **funds-comparator** - Funds comparison tool at `funds.wealthypot.com` (Spring Boot + Vaadin/Hilla, 2 replicas)
 
 ## Common Commands
 
@@ -57,7 +56,6 @@ docker image prune -f
 | Variable | Service |
 |----------|---------|
 | `ZAQLICK_APP_VERSION` | zaqlick-app |
-| `ZAQLICK_SOCIAL_DATA_PARSER_VERSION` | zaqlick-social-data-parser |
 | `FUNDS_COMPARATOR_VERSION` | funds-comparator |
 | `TRAEFIK_VERSION` | traefik |
 
