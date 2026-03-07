@@ -167,8 +167,23 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} \
-            "docker login -u \"${DOCKER_USER}\" -p \"${DOCKER_PASSWORD}\" \"${DOCKER_HOST}\""
+          for host in ${{ vars.EC2_HOST }} ${{ vars.EC2_HOST_2 }} ${{ vars.EC2_HOST_3 }}; do
+            ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${host} \
+              "docker login -u \"${DOCKER_USER}\" -p \"${DOCKER_PASSWORD}\" \"${DOCKER_HOST}\""
+          done
+
+      - name: Pre-pull images on all nodes
+        run: |
+          set -a
+          source .env
+          set +a
+          for host in ${{ vars.EC2_HOST }} ${{ vars.EC2_HOST_2 }} ${{ vars.EC2_HOST_3 }}; do
+            ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${host} \
+              "docker pull api.repoflow.io/xpvitblr-504/zaqlick-app/zaqlick-app:${ZAQLICK_APP_VERSION} && \
+               docker pull api.repoflow.io/xpvitblr-504/funds-comparator/library/main-app:${FUNDS_COMPARATOR_VERSION}" &
+          done
+          wait
+          echo "All nodes pre-pulled images"
 
       - name: Deploy on EC2
         run: |
