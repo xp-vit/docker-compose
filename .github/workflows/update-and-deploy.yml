@@ -165,6 +165,7 @@ jobs:
 
       - name: Write Google credentials for linkedin-tracker
         run: |
+          mkdir -p linkedin-tracker
           echo '${{ secrets.LINKEDIN_TRACKER_GOOGLE_CREDS }}' > linkedin-tracker/google-credentials.json
 
       - name: Copy docker-compose.yml and application properties files to server
