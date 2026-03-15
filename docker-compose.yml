@@ -116,6 +116,70 @@ services:
     volumes:
       - ./funds-comparator/application.yaml:/workspace/application-prod.yaml
 
+  linkedin-tracker:
+    image: api.repoflow.io/xpvitblr-504/marketing-tools/linkedin-tracker:${LINKEDIN_TRACKER_VERSION:-latest}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      update_config:
+        order: stop-first
+        failure_action: rollback
+      labels:
+        - "traefik.enable=true"
+        - "traefik.swarm.network=traefik_web"
+        # Service definition (Flask status page on port 8080)
+        - "traefik.http.services.stats.loadbalancer.server.port=8080"
+        # HTTPS router
+        - "traefik.http.routers.stats.rule=Host(`stats.patotski.com`)"
+        - "traefik.http.routers.stats.entrypoints=websecure"
+        - "traefik.http.routers.stats.tls.certresolver=le"
+        - "traefik.http.routers.stats.service=stats"
+        # HTTP router (redirects to HTTPS)
+        - "traefik.http.routers.stats-http.rule=Host(`stats.patotski.com`)"
+        - "traefik.http.routers.stats-http.entrypoints=web"
+        - "traefik.http.routers.stats-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.stats-http.service=stats"
+    networks:
+      - web
+    volumes:
+      - ./linkedin-tracker/app.env:/app/data/.env
+      - ./linkedin-tracker/google-credentials.json:/app/data/google-credentials.json
+
+  multi-inbox:
+    image: api.repoflow.io/xpvitblr-504/marketing-tools/library/multi-inbox:${MULTI_INBOX_VERSION:-latest}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+      update_config:
+        order: stop-first
+        failure_action: rollback
+        delay: 10s
+      rollback_config:
+        order: stop-first
+      labels:
+        - "traefik.enable=true"
+        - "traefik.swarm.network=traefik_web"
+        # Service definition
+        - "traefik.http.services.multi-inbox.loadbalancer.server.port=8080"
+        # HTTPS router
+        - "traefik.http.routers.multi-inbox.rule=Host(`lin.eucsoft.com`)"
+        - "traefik.http.routers.multi-inbox.entrypoints=websecure"
+        - "traefik.http.routers.multi-inbox.tls.certresolver=le"
+        - "traefik.http.routers.multi-inbox.service=multi-inbox"
+        # HTTP router (redirects to HTTPS)
+        - "traefik.http.routers.multi-inbox-http.rule=Host(`lin.eucsoft.com`)"
+        - "traefik.http.routers.multi-inbox-http.entrypoints=web"
+        - "traefik.http.routers.multi-inbox-http.middlewares=redirect-to-https"
+        - "traefik.http.routers.multi-inbox-http.service=multi-inbox"
+    networks:
+      - web
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+    volumes:
+      - ./multi-inbox/application.yaml:/workspace/application-prod.yaml
+
 networks:
   web:
     name: traefik_web

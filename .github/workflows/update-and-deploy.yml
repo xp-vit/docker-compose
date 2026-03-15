@@ -110,9 +110,10 @@ jobs:
 
       - name: Ensure directories exist on server
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }} "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator"
+          for host in ${{ vars.EC2_HOST }} ${{ vars.EC2_HOST_2 }} ${{ vars.EC2_HOST_3 }}; do
+            ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${host} \
+              "mkdir -p /home/${{ vars.EC2_USER }}/deploy/zaqlick-app /home/${{ vars.EC2_USER }}/deploy/funds-comparator /home/${{ vars.EC2_USER }}/deploy/linkedin-tracker /home/${{ vars.EC2_USER }}/deploy/multi-inbox"
+          done
 
       - name: Generate application properties file for zaqlick
         env:
@@ -139,6 +140,33 @@ jobs:
           fi
 
 
+      - name: Generate config for linkedin-tracker
+        env:
+          LINKEDIN_TRACKER_DB_URL: ${{ vars.LINKEDIN_TRACKER_DB_URL }}
+          LINKEDIN_TRACKER_CLIENT_ID: ${{ vars.LINKEDIN_TRACKER_CLIENT_ID }}
+          LINKEDIN_TRACKER_CLIENT_SECRET: ${{ secrets.LINKEDIN_TRACKER_CLIENT_SECRET }}
+          LINKEDIN_TRACKER_ACCOUNTS: ${{ secrets.LINKEDIN_TRACKER_ACCOUNTS }}
+          LINKEDIN_TRACKER_GOOGLE_SHEET_ID: ${{ vars.LINKEDIN_TRACKER_GOOGLE_SHEET_ID }}
+        run: |
+          if [ -f linkedin-tracker/app.env.template ]; then
+            envsubst < linkedin-tracker/app.env.template > linkedin-tracker/app.env
+          fi
+
+      - name: Generate application properties file for multi-inbox
+        env:
+          DB_URL: ${{ vars.MULTI_INBOX_DB_URL }}
+          DB_USER: ${{ secrets.MULTI_INBOX_DB_USER }}
+          DB_PASSWORD: ${{ secrets.MULTI_INBOX_DB_PASSWORD }}
+          APP_BASE_URL: ${{ vars.MULTI_INBOX_APP_BASE_URL }}
+        run: |
+          if [ -f multi-inbox/application.yaml.template ]; then
+            envsubst < multi-inbox/application.yaml.template > multi-inbox/application.yaml
+          fi
+
+      - name: Write Google credentials for linkedin-tracker
+        run: |
+          echo '${{ secrets.LINKEDIN_TRACKER_GOOGLE_CREDS }}' > linkedin-tracker/google-credentials.json
+
       - name: Copy docker-compose.yml and application properties files to server
         run: |
           scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./docker-compose.yml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/docker-compose.yml
@@ -148,6 +176,13 @@ jobs:
           fi
           if [ -f ./funds-comparator/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./funds-comparator/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/funds-comparator/application.yaml
+          fi
+          if [ -f ./linkedin-tracker/app.env ]; then
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./linkedin-tracker/app.env ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/linkedin-tracker/app.env
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./linkedin-tracker/google-credentials.json ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/linkedin-tracker/google-credentials.json
+          fi
+          if [ -f ./multi-inbox/application.yaml ]; then
+            scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./multi-inbox/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/deploy/multi-inbox/application.yaml
           fi
 
       - name: Copy application config to worker nodes
@@ -159,6 +194,17 @@ jobs:
           if [ -f ./funds-comparator/application.yaml ]; then
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./funds-comparator/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_2 }}:/home/${{ vars.EC2_USER }}/deploy/funds-comparator/application.yaml
             scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./funds-comparator/application.yaml ${{ vars.EC2_USER }}@${{ vars.EC2_HOST_3 }}:/home/${{ vars.EC2_USER }}/deploy/funds-comparator/application.yaml
+          fi
+          if [ -f ./linkedin-tracker/app.env ]; then
+            for host in ${{ vars.EC2_HOST_2 }} ${{ vars.EC2_HOST_3 }}; do
+              scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./linkedin-tracker/app.env ${{ vars.EC2_USER }}@${host}:/home/${{ vars.EC2_USER }}/deploy/linkedin-tracker/app.env
+              scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./linkedin-tracker/google-credentials.json ${{ vars.EC2_USER }}@${host}:/home/${{ vars.EC2_USER }}/deploy/linkedin-tracker/google-credentials.json
+            done
+          fi
+          if [ -f ./multi-inbox/application.yaml ]; then
+            for host in ${{ vars.EC2_HOST_2 }} ${{ vars.EC2_HOST_3 }}; do
+              scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ./multi-inbox/application.yaml ${{ vars.EC2_USER }}@${host}:/home/${{ vars.EC2_USER }}/deploy/multi-inbox/application.yaml
+            done
           fi
 
       - name: Global Docker login on server
@@ -180,7 +226,9 @@ jobs:
           for host in ${{ vars.EC2_HOST }} ${{ vars.EC2_HOST_2 }} ${{ vars.EC2_HOST_3 }}; do
             ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ vars.EC2_USER }}@${host} \
               "docker pull api.repoflow.io/xpvitblr-504/zaqlick-app/zaqlick-app:${ZAQLICK_APP_VERSION} && \
-               docker pull api.repoflow.io/xpvitblr-504/funds-comparator/library/main-app:${FUNDS_COMPARATOR_VERSION}" &
+               docker pull api.repoflow.io/xpvitblr-504/funds-comparator/library/main-app:${FUNDS_COMPARATOR_VERSION} && \
+               docker pull api.repoflow.io/xpvitblr-504/marketing-tools/linkedin-tracker:${LINKEDIN_TRACKER_VERSION} && \
+               docker pull api.repoflow.io/xpvitblr-504/marketing-tools/library/multi-inbox:${MULTI_INBOX_VERSION}" &
           done
           wait
           echo "All nodes pre-pulled images"
