@@ -49,6 +49,10 @@ services:
         - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
         # Service definition for main app (port 8080)
         - "traefik.http.services.zaqlick.loadbalancer.server.port=8080"
+        # Health check
+        - "traefik.http.services.zaqlick.loadbalancer.healthcheck.path=/actuator/health"
+        - "traefik.http.services.zaqlick.loadbalancer.healthcheck.interval=5s"
+        - "traefik.http.services.zaqlick.loadbalancer.healthcheck.timeout=3s"
         # HTTPS router for main app
         - "traefik.http.routers.zaqlick.rule=Host(`app.zaqlick.com`)"
         - "traefik.http.routers.zaqlick.entrypoints=websecure"
@@ -99,6 +103,10 @@ services:
         - "traefik.swarm.network=traefik_web"
         # Service definition
         - "traefik.http.services.funds-comparator.loadbalancer.server.port=8080"
+        # Health check
+        - "traefik.http.services.funds-comparator.loadbalancer.healthcheck.path=/actuator/health"
+        - "traefik.http.services.funds-comparator.loadbalancer.healthcheck.interval=5s"
+        - "traefik.http.services.funds-comparator.loadbalancer.healthcheck.timeout=3s"
         # HTTPS router
         - "traefik.http.routers.funds-comparator.rule=Host(`funds.wealthypot.com`)"
         - "traefik.http.routers.funds-comparator.entrypoints=websecure"
@@ -165,6 +173,10 @@ services:
         - "traefik.swarm.network=traefik_web"
         # Service definition
         - "traefik.http.services.multi-inbox.loadbalancer.server.port=8080"
+        # Health check — Traefik won't route to a container until /actuator/health returns 200
+        - "traefik.http.services.multi-inbox.loadbalancer.healthcheck.path=/actuator/health"
+        - "traefik.http.services.multi-inbox.loadbalancer.healthcheck.interval=5s"
+        - "traefik.http.services.multi-inbox.loadbalancer.healthcheck.timeout=3s"
         # HTTPS router
         - "traefik.http.routers.multi-inbox.rule=Host(`lin.eucsoft.com`)"
         - "traefik.http.routers.multi-inbox.entrypoints=websecure"
