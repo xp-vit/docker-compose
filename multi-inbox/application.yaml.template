@@ -6,3 +6,5 @@ spring:
     password: "$DB_PASSWORD"
 app:
   base-url: "$APP_BASE_URL"
+anthropic:
+  api-key: "$ANTHROPIC_API_KEY"
