@@ -159,6 +159,10 @@ jobs:
           DB_PASSWORD: ${{ secrets.MULTI_INBOX_DB_PASSWORD }}
           APP_BASE_URL: ${{ vars.MULTI_INBOX_APP_BASE_URL }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PROXY_HOST: ${{ vars.PROXY_HOST }}
+          PROXY_PORT: ${{ vars.PROXY_PORT }}
+          PROXY_USER: ${{ vars.PROXY_USER }}
+          PROXY_PASS: ${{ secrets.PROXY_PASS }}
         run: |
           if [ -f multi-inbox/application.yaml.template ]; then
             envsubst < multi-inbox/application.yaml.template > multi-inbox/application.yaml
