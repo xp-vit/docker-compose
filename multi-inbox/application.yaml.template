@@ -6,8 +6,10 @@ spring:
     password: "$DB_PASSWORD"
 app:
   base-url: "$APP_BASE_URL"
-anthropic:
-  api-key: "$ANTHROPIC_API_KEY"
+spring:
+  ai:
+    anthropic:
+      api-key: "$ANTHROPIC_API_KEY"
 proxy:
   host: "$PROXY_HOST"
   port: $PROXY_PORT
