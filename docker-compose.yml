@@ -166,6 +166,11 @@ services:
         delay: 10s
       rollback_config:
         order: start-first
+      resources:
+        limits:
+          memory: 2048M
+        reservations:
+          memory: 1536M
       placement:
         max_replicas_per_node: 1
       labels:
