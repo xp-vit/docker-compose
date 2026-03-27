@@ -168,9 +168,9 @@ services:
         order: start-first
       resources:
         limits:
-          memory: 2048M
+          memory: 1024M
         reservations:
-          memory: 1536M
+          memory: 768M
       placement:
         max_replicas_per_node: 1
       labels:
