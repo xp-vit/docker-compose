@@ -155,7 +155,7 @@ services:
       - ./linkedin-tracker/google-credentials.json:/app/data/google-credentials.json
 
   multi-inbox:
-    image: api.repoflow.io/xpvitblr-504/marketing-tools/library/multi-inbox:${MULTI_INBOX_VERSION:-latest}
+    image: xpvit/multi-inbox:${MULTI_INBOX_VERSION:-latest}
     deploy:
       replicas: 2
       restart_policy:
